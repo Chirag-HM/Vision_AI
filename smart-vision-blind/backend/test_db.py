@@ -21,7 +21,7 @@ async def main():
     from models.caregiver import CaregiverLink
     from models.iot_log   import IotLog
 
-    # ── 1. Connect ───────────────────────────────────────────────────────────
+    # -- 1. Connect -----------------------------------------------------------
     document_models = [
         User, RefreshToken,
         Device, SOSEvent,
@@ -29,9 +29,9 @@ async def main():
         CaregiverLink, IotLog,
     ]
     await connect_db(document_models)
-    print("\n✅ Connected to MongoDB Atlas\n")
+    print("\n[OK] Connected to MongoDB Atlas\n")
 
-    # ── 2. Create User ────────────────────────────────────────────────────────
+    # -- 2. Create User --------------------------------------------------------
     existing = await User.find_one(User.email == "testbot@smartvision.dev")
     if existing:
         await existing.delete()
@@ -46,18 +46,18 @@ async def main():
         city="Bengaluru",
     )
     await user.insert()
-    print(f"✅ User created:      {user.email} [{user.role}] → id={user.id}")
+    print(f"[OK] User created:      {user.email} [{user.role}] -> id={user.id}")
 
-    # ── 3. Refresh Token ──────────────────────────────────────────────────────
+    # -- 3. Refresh Token ------------------------------------------------------
     token = RefreshToken(
         user_id=user.id,
         token_hash="abc123fakehash",
         expires_at=datetime.now(timezone.utc) + timedelta(days=7),
     )
     await token.insert()
-    print(f"✅ RefreshToken:      id={token.id}  user_id={token.user_id}")
+    print(f"[OK] RefreshToken:      id={token.id}  user_id={token.user_id}")
 
-    # ── 4. Device ─────────────────────────────────────────────────────────────
+    # -- 4. Device -------------------------------------------------------------
     dev = await Device.find_one(Device.device_id == "PI-001-TEST")
     if dev:
         await dev.delete()
@@ -70,18 +70,18 @@ async def main():
         location=GeoPoint.create(lat=12.9750, lng=77.6070),
     )
     await device.insert()
-    print(f"✅ Device created:    {device.device_id}  battery={device.battery}%")
+    print(f"[OK] Device created:    {device.device_id}  battery={device.battery}%")
 
-    # ── 5. SOS Event ──────────────────────────────────────────────────────────
+    # -- 5. SOS Event ----------------------------------------------------------
     sos = SOSEvent(
         user_id=user.id,
         location=GeoPoint.create(lat=12.9750, lng=77.6070),
         notified_caregivers=[],
     )
     await sos.insert()
-    print(f"✅ SOSEvent:          id={sos.id}  active={sos.is_active}")
+    print(f"[OK] SOSEvent:          id={sos.id}  active={sos.is_active}")
 
-    # ── 6. Volunteer ──────────────────────────────────────────────────────────
+    # -- 6. Volunteer ----------------------------------------------------------
     vol = Volunteer(
         user_id=user.id,
         is_available=True,
@@ -90,9 +90,9 @@ async def main():
         location=GeoPoint.create(lat=12.9755, lng=77.6075),
     )
     await vol.insert()
-    print(f"✅ Volunteer:         id={vol.id}  skills={vol.skills}")
+    print(f"[OK] Volunteer:         id={vol.id}  skills={vol.skills}")
 
-    # ── 7. Help Request ───────────────────────────────────────────────────────
+    # -- 7. Help Request -------------------------------------------------------
     req = HelpRequest(
         requester_id=user.id,
         status=HelpRequestStatus.PENDING,
@@ -100,14 +100,14 @@ async def main():
         location=GeoPoint.create(lat=12.9750, lng=77.6070),
     )
     await req.insert()
-    print(f"✅ HelpRequest:       id={req.id}  status={req.status}")
+    print(f"[OK] HelpRequest:       id={req.id}  status={req.status}")
 
-    # ── 8. Caregiver Link ─────────────────────────────────────────────────────
+    # -- 8. Caregiver Link -----------------------------------------------------
     link = CaregiverLink(caregiver_id=user.id, user_id=user.id)
     await link.insert()
-    print(f"✅ CaregiverLink:     caregiver={link.caregiver_id}  user={link.user_id}")
+    print(f"[OK] CaregiverLink:     caregiver={link.caregiver_id}  user={link.user_id}")
 
-    # ── 9. IoT Log ────────────────────────────────────────────────────────────
+    # -- 9. IoT Log ------------------------------------------------------------
     log = IotLog(
         device_id="PI-001-TEST",
         user_id=user.id,
@@ -115,19 +115,19 @@ async def main():
         data={"distance_m": 0.8, "direction": "front"},
     )
     await log.insert()
-    print(f"✅ IotLog:            event={log.event}  data={log.data}")
+    print(f"[OK] IotLog:            event={log.event}  data={log.data}")
 
-    # ── 10. Read back ─────────────────────────────────────────────────────────
+    # -- 10. Read back ---------------------------------------------------------
     fetched_user = await User.find_one(User.email == "testbot@smartvision.dev")
-    print(f"\n✅ Read-back User:    {fetched_user.email} verified={fetched_user.is_verified}")
+    print(f"\n[OK] Read-back User:    {fetched_user.email} verified={fetched_user.is_verified}")
 
     recent_logs = await IotLog.recent("PI-001-TEST", limit=5)
-    print(f"✅ Recent logs:       {len(recent_logs)} log(s) found")
+    print(f"[OK] Recent logs:       {len(recent_logs)} log(s) found")
 
-    print("\n🎉 All documents created and read back successfully!")
+    print("\n[SUCCESS] All documents created and read back successfully!")
 
-    # ── 11. Cleanup ───────────────────────────────────────────────────────────
-    print("\n🧹 Cleaning up test data...")
+    # -- 11. Cleanup -----------------------------------------------------------
+    print("\n[CLEANUP] Cleaning up test data...")
     await user.delete()
     await token.delete()
     await device.delete()
@@ -136,7 +136,7 @@ async def main():
     await req.delete()
     await link.delete()
     await log.delete()
-    print("✅ Cleanup complete.")
+    print("[OK] Cleanup complete.")
 
 
 if __name__ == "__main__":
