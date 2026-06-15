@@ -26,7 +26,7 @@ def create_access_token(user_id: int, role: str) -> str:
     """Creates a short-lived JWT access token."""
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "role": role,
         "type": "access",
         "exp": expire,
@@ -38,7 +38,7 @@ def create_refresh_token(user_id: int) -> str:
     """Creates a long-lived JWT refresh token."""
     expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "type": "refresh",
         "exp": expire,
     }
@@ -54,7 +54,7 @@ def decode_access_token(token: str, raise_http: bool = True) -> Optional[dict]:
     If raise_http=False, returns None on failure (useful for WebSocket auth).
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_sub": False})
         if payload.get("type") != "access":
             raise JWTError("Not an access token")
         return payload
@@ -71,7 +71,7 @@ def decode_access_token(token: str, raise_http: bool = True) -> Optional[dict]:
 def decode_refresh_token(token: str) -> Optional[dict]:
     """Decodes a JWT refresh token. Returns None on failure."""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_sub": False})
         if payload.get("type") != "refresh":
             return None
         return payload

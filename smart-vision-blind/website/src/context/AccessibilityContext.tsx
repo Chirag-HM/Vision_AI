@@ -11,6 +11,8 @@ interface AccessibilityContextType {
   highContrast: boolean;
   toggleHighContrast: () => void;
   speak: (text: string) => void;
+  isTTSActive: boolean;
+  toggleTTS: () => void;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -27,6 +29,15 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   const [highContrast, setHighContrast] = useState<boolean>(() => {
     return localStorage.getItem('highContrast') === 'true';
   });
+
+  const [isTTSActive, setIsTTSActive] = useState<boolean>(() => {
+    return localStorage.getItem('ttsActive') !== 'false';
+  });
+
+  // Persist states to local storage
+  useEffect(() => {
+    localStorage.setItem('ttsActive', String(isTTSActive));
+  }, [isTTSActive]);
 
   // Persist states to local storage
   useEffect(() => {
@@ -48,6 +59,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Voice announcement helper (Requirement #2, AI voice feedback/TTS)
   const speak = (text: string) => {
+    if (!isTTSActive) return;
     if ('speechSynthesis' in window) {
       // Cancel previous speech to prevent overlapping announcements
       window.speechSynthesis.cancel();
@@ -56,6 +68,19 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       utterance.pitch = 1.0;
       window.speechSynthesis.speak(utterance);
     }
+  };
+
+  const toggleTTS = () => {
+    setIsTTSActive((prev) => {
+      const newState = !prev;
+      if (newState && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance("Voice enabled"));
+      } else if (!newState && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      return newState;
+    });
   };
 
   const toggleSimpleMode = () => {
@@ -123,6 +148,8 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         highContrast,
         toggleHighContrast,
         speak,
+        isTTSActive,
+        toggleTTS,
       }}
     >
       {children}

@@ -69,6 +69,17 @@ async def root():
 async def health_check():
     return {"status": "healthy"}
 
+@app.get("/debug-env")
+async def debug_env():
+    import os
+    from auth.jwt_utils import SECRET_KEY as JWT_SECRET
+    return {
+        "os_jwt_secret_key": os.getenv("JWT_SECRET_KEY"),
+        "os_secret_key": os.getenv("SECRET_KEY"),
+        "jwt_utils_secret_key": JWT_SECRET,
+    }
+
+
 # ─── Authenticated WebSocket ──────────────────────────────────────────────────
 @app.websocket("/ws/iot")
 async def websocket_iot_endpoint(

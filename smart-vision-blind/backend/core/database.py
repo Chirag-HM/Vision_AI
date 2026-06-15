@@ -62,6 +62,10 @@ async def lifespan(app):
     from models.caregiver import CaregiverLink
     from models.iot_log   import IotLog
 
+    # Initialize SQLite tables
+    from auth.database import init_db
+    init_db()
+
     document_models = [
         User, RefreshToken,
         Device, SOSEvent,

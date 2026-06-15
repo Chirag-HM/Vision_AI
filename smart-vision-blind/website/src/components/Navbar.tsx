@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAccessibility } from '../context/AccessibilityContext';
-import { Eye, Menu, X, Volume2, Type, RefreshCw } from 'lucide-react';
+import { Eye, Menu, X, Volume2, VolumeX, Type, RefreshCw } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const {
@@ -11,6 +11,8 @@ export const Navbar: React.FC = () => {
     increaseTextSize,
     decreaseTextSize,
     speak,
+    isTTSActive,
+    toggleTTS,
   } = useAccessibility();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -102,6 +104,14 @@ export const Navbar: React.FC = () => {
               >
                 <RefreshCw className="w-6 h-6 animate-spin" /> Standard Visual Mode
               </button>
+              <button
+                onClick={toggleTTS}
+                className="bg-purple-600 text-white px-4 py-2 text-xl font-bold flex items-center gap-2 border-2 border-white hover:bg-purple-500 focus:ring-4 focus:ring-yellow-400"
+                aria-label={isTTSActive ? "Disable Text to Speech" : "Enable Text to Speech"}
+              >
+                {isTTSActive ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
+                {isTTSActive ? "Voice: ON" : "Voice: OFF"}
+              </button>
             </div>
           </nav>
         </div>
@@ -145,11 +155,19 @@ export const Navbar: React.FC = () => {
         {/* Action Button & Menu */}
         <div className="hidden md:flex items-center gap-4">
           <button
+            onClick={toggleTTS}
+            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            aria-label="Toggle Text to Speech"
+            title={isTTSActive ? "Disable Voice" : "Enable Voice"}
+          >
+            {isTTSActive ? <Volume2 className="w-5 h-5 text-blue-300" /> : <VolumeX className="w-5 h-5 text-slate-400" />}
+          </button>
+          <button
             onClick={handleToggleSimple}
             className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-blue-900/30 transition-all border border-blue-400/20 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-[#0a0f2c]"
             aria-label="Activate Screen Reader and Simple Accessible Mode"
           >
-            <Volume2 className="w-5 h-5 text-blue-300 animate-pulse" /> Accessible Simple Mode
+            <Eye className="w-5 h-5 text-blue-300" /> Accessible Simple Mode
           </button>
         </div>
 
@@ -179,10 +197,17 @@ export const Navbar: React.FC = () => {
             </Link>
           ))}
           <button
+            onClick={toggleTTS}
+            className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 py-3 rounded-xl font-bold border border-white/10"
+          >
+            {isTTSActive ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            {isTTSActive ? "Voice: ON" : "Voice: OFF"}
+          </button>
+          <button
             onClick={handleToggleSimple}
             className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold shadow-lg"
           >
-            <Volume2 className="w-5 h-5" /> Accessible Simple Mode
+            <Eye className="w-5 h-5" /> Accessible Simple Mode
           </button>
         </div>
       )}
