@@ -129,7 +129,7 @@ export const SOSPanel: React.FC = () => {
 
   // 2. PREMIUM DYNAMIC PORTAL (DARK THEME)
   return (
-    <div className="min-h-screen bg-[#0a0f2c] pt-28 pb-16 text-white relative">
+    <div className="min-h-screen pt-28 pb-16 text-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Side Column: Giant Panic Trigger */}

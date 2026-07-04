@@ -223,7 +223,7 @@ export const Dashboard: React.FC = () => {
 
   // --- 2. PREMIUM DARK-THEMED DASHBOARD ---
   return (
-    <div className="min-h-screen bg-[#0a0f2c] pt-24 pb-16 text-white font-sans">
+    <div className="min-h-screen pt-24 pb-16 text-white font-sans relative overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-6">
         
         {/* Top Header */}

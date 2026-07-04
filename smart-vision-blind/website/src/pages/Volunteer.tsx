@@ -185,7 +185,7 @@ export const Volunteer: React.FC = () => {
   // --- 2. REGISTRATION / LOGIN VIEW ---
   if (view === 'registration') {
     return (
-      <div className="min-h-screen bg-[#0a0f2c] pt-24 pb-16 text-white font-sans flex items-center justify-center px-4">
+      <div className="min-h-screen pt-24 pb-16 text-white font-sans flex items-center justify-center px-4 relative overflow-hidden">
         <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
           {/* Left: Copy & Stats */}
@@ -319,7 +319,7 @@ export const Volunteer: React.FC = () => {
 
   // --- 3. VOLUNTEER DASHBOARD VIEW ---
   return (
-    <div className="min-h-screen bg-[#0a0f2c] pt-24 pb-16 text-white font-sans px-6">
+    <div className="min-h-screen pt-24 pb-16 text-white font-sans px-6 relative overflow-hidden">
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header & Status Toggle */}

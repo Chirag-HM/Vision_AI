@@ -1,8 +1,3 @@
-/**
- * src/pages/Login.tsx
- * Glassmorphic login & registration page with role selection.
- */
-
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, type UserRole } from '../context/AuthContext';
@@ -55,58 +50,63 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f2c] flex items-center justify-center px-4 pt-24 pb-16 font-sans">
-      {/* Background glow */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[30%] w-[600px] h-[400px] bg-blue-600/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-[10%] w-[400px] h-[300px] bg-purple-600/10 rounded-full blur-[100px]" />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center px-6 pt-24 pb-16 font-sans relative overflow-hidden text-white">
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 text-blue-400 mb-4">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/10 mb-6 text-[#e8ff47]">
             <Shield className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-black text-white">Smart Vision</h1>
-          <p className="text-slate-400 text-sm mt-1">Secure Access Portal</p>
+          <h1 className="text-3xl font-black text-white tracking-tight uppercase" style={{ fontFamily: 'var(--font-sans)' }}>
+            System <span className="text-[#e8ff47]">Access</span>
+          </h1>
+          <p className="text-gray-500 text-sm mt-2 uppercase tracking-widest">Secure Portal</p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-3xl p-8 shadow-2xl">
+        {/* Glass Card */}
+        <div className="relative p-8 rounded-3xl overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(20px)',
+          }}>
+          
+          {/* Subtle inner top glow */}
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
           {/* Mode toggle */}
-          <div className="flex bg-black/40 rounded-2xl p-1 mb-8">
+          <div className="flex bg-black/50 rounded-2xl p-1.5 mb-8 border border-white/5">
             <button
               onClick={() => setMode('login')}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${mode === 'login' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${mode === 'login' ? 'bg-[#e8ff47] text-black shadow-[0_0_15px_rgba(232,255,71,0.2)]' : 'text-gray-500 hover:text-white'}`}
             >
-              <LogIn className="inline w-4 h-4 mr-1.5" /> Login
+              <LogIn className="inline w-4 h-4 mr-2 -mt-0.5" /> Login
             </button>
             <button
               onClick={() => setMode('register')}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${mode === 'register' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${mode === 'register' ? 'bg-[#e8ff47] text-black shadow-[0_0_15px_rgba(232,255,71,0.2)]' : 'text-gray-500 hover:text-white'}`}
             >
-              <UserPlus className="inline w-4 h-4 mr-1.5" /> Register
+              <UserPlus className="inline w-4 h-4 mr-2 -mt-0.5" /> Register
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
-              <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Email</label>
+              <label className="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">Email Address</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                placeholder="you@example.com"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="operator@smartvision.ai"
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#e8ff47]/50 focus:ring-1 focus:ring-[#e8ff47]/50 transition-all text-sm"
               />
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Password</label>
+              <label className="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">Access Code</label>
               <div className="relative">
                 <input
                   type={showPass ? 'text' : 'password'}
@@ -114,32 +114,34 @@ export const Login: React.FC = () => {
                   onChange={e => setPassword(e.target.value)}
                   required
                   placeholder="••••••••"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 pr-12 text-white placeholder-gray-600 focus:outline-none focus:border-[#e8ff47]/50 focus:ring-1 focus:ring-[#e8ff47]/50 transition-all text-sm tracking-widest"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(p => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
                 >
-                  {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
             {/* Role selector (register only) */}
             {mode === 'register' && (
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">I am a...</label>
-                <div className="grid grid-cols-2 gap-2">
+              <div className="pt-2">
+                <label className="block text-[10px] font-bold text-gray-400 mb-3 uppercase tracking-[0.2em]">Access Level</label>
+                <div className="grid grid-cols-2 gap-3">
                   {ROLES.map(r => (
                     <button
                       key={r.value}
                       type="button"
                       onClick={() => setRole(r.value)}
-                      className={`text-left p-3 rounded-xl border transition-all ${role === r.value ? 'border-blue-500 bg-blue-500/10 text-white' : 'border-white/10 bg-black/20 text-slate-400 hover:border-white/20'}`}
+                      className={`text-left p-4 rounded-xl border transition-all duration-300 ${role === r.value ? 'border-[#e8ff47]/50 bg-[#e8ff47]/10 text-white shadow-[0_0_15px_rgba(232,255,71,0.05)]' : 'border-white/5 bg-black/20 text-gray-500 hover:border-white/20'}`}
                     >
-                      <div className="font-bold text-xs">{r.label}</div>
-                      <div className="text-[10px] mt-0.5 opacity-70">{r.desc}</div>
+                      <div className="font-bold text-xs uppercase tracking-wider mb-1" style={{ color: role === r.value ? '#e8ff47' : '' }}>
+                        {r.label}
+                      </div>
+                      <div className="text-[10px] opacity-70 leading-relaxed font-sans">{r.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -147,21 +149,21 @@ export const Login: React.FC = () => {
             )}
 
             {/* Error / Success messages */}
-            {error   && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 px-4 py-3 rounded-xl">{error}</p>}
-            {success && <p className="text-emerald-400 text-sm bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 rounded-xl">{success}</p>}
+            {error   && <p className="text-red-400 text-xs tracking-wide bg-red-500/10 border border-red-500/20 px-4 py-3 rounded-xl uppercase">{error}</p>}
+            {success && <p className="text-[#e8ff47] text-xs tracking-wide bg-[#e8ff47]/10 border border-[#e8ff47]/20 px-4 py-3 rounded-xl uppercase">{success}</p>}
 
             {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2"
+              className="w-full bg-[#e8ff47] hover:bg-white disabled:opacity-60 text-black font-black uppercase tracking-widest text-xs py-4.5 rounded-xl transition-all duration-500 hover:shadow-[0_0_30px_rgba(232,255,71,0.3)] flex items-center justify-center gap-3 mt-4"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
               ) : mode === 'login' ? (
-                <><LogIn className="w-4 h-4" /> Login</>
+                <><LogIn className="w-4 h-4" /> Authenticate</>
               ) : (
-                <><UserPlus className="w-4 h-4" /> Create Account</>
+                <><UserPlus className="w-4 h-4" /> Initialize Account</>
               )}
             </button>
           </form>
