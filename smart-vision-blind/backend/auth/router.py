@@ -1,6 +1,6 @@
 """
 auth/router.py
-FastAPI router implementing: register, verify email, login, refresh, logout.
+FastAPI router implementing: register, verify email (OTP), login, refresh, logout.
 """
 
 import secrets
@@ -23,11 +23,15 @@ from auth.jwt_utils import (
     REFRESH_TOKEN_EXPIRE_DAYS,
 )
 from auth.dependencies import get_current_user
+from auth.email_service import generate_otp, send_otp_email
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 # Password hashing context using bcrypt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# OTP validity duration
+OTP_EXPIRE_MINUTES = 5
 
 
 # ─── Pydantic Schemas ──────────────────────────────────────────────────────────
@@ -36,6 +40,13 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
     role: UserRole = UserRole.BLIND_USER
+
+class VerifyOtpRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
+class ResendOtpRequest(BaseModel):
+    email: EmailStr
 
 class LoginResponse(BaseModel):
     access_token: str
@@ -67,6 +78,14 @@ def _set_refresh_cookie(response: Response, token: str):
         path="/auth/refresh",
     )
 
+def _generate_and_store_otp(user: User, db: Session) -> str:
+    """Generate an OTP, store it on the user record, and return it."""
+    otp = generate_otp()
+    user.otp_code = otp
+    user.otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=OTP_EXPIRE_MINUTES)
+    db.commit()
+    return otp
+
 
 # ─── POST /auth/register ───────────────────────────────────────────────────────
 
@@ -74,7 +93,7 @@ def _set_refresh_cookie(response: Response, token: str):
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
     """
     Register a new user with email, password, and role.
-    Sends a mock verification token (in production wire to a real email service).
+    Generates a 6-digit OTP and sends it to the user's email for verification.
     """
     existing = db.query(User).filter(User.email == req.email).first()
     if existing:
@@ -89,13 +108,94 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    # In production: send a verification email with a signed token.
-    # For now we auto-verify to allow immediate testing.
+    # Generate and send OTP
+    otp = _generate_and_store_otp(user, db)
+    send_otp_email(user.email, otp)
+
+    print(f"[Auth] Registered user {user.email} as {user.role} — OTP sent")
+    return {"message": "OTP sent to your email. Please verify to continue."}
+
+
+# ─── POST /auth/verify-otp ────────────────────────────────────────────────────
+
+@router.post("/verify-otp", response_model=MessageResponse)
+def verify_otp(req: VerifyOtpRequest, db: Session = Depends(get_db)):
+    """
+    Verify the OTP sent to the user's email during registration.
+    Marks the user as verified on success.
+    """
+    user = db.query(User).filter(User.email == req.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account found with this email.",
+        )
+
+    if user.is_verified:
+        return {"message": "Email is already verified. You can log in."}
+
+    # Check OTP exists
+    if not user.otp_code or not user.otp_expires_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No OTP found. Please request a new one.",
+        )
+
+    # Check OTP expiry (handle SQLite naive datetime issue)
+    expires_at = user.otp_expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if datetime.now(timezone.utc) > expires_at:
+        # Clear expired OTP
+        user.otp_code = None
+        user.otp_expires_at = None
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="OTP has expired. Please request a new one.",
+        )
+
+    # Check OTP match
+    if req.otp.strip() != user.otp_code:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid OTP. Please try again.",
+        )
+
+    # ✓ OTP valid — mark user as verified
     user.is_verified = True
+    user.otp_code = None
+    user.otp_expires_at = None
     db.commit()
 
-    print(f"[Auth] Registered user {user.email} as {user.role}")
-    return {"message": f"Registration successful. Welcome, {user.email}!"}
+    print(f"[Auth] ✓ Email verified: {user.email}")
+    return {"message": "Email verified successfully! You can now log in."}
+
+
+# ─── POST /auth/resend-otp ────────────────────────────────────────────────────
+
+@router.post("/resend-otp", response_model=MessageResponse)
+def resend_otp(req: ResendOtpRequest, db: Session = Depends(get_db)):
+    """
+    Generate a new OTP and resend it to the user's email.
+    """
+    user = db.query(User).filter(User.email == req.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account found with this email.",
+        )
+
+    if user.is_verified:
+        return {"message": "Email is already verified. You can log in."}
+
+    # Generate and send a new OTP
+    otp = _generate_and_store_otp(user, db)
+    send_otp_email(user.email, otp)
+
+    print(f"[Auth] Resent OTP to {user.email}")
+    return {"message": "A new OTP has been sent to your email."}
 
 
 # ─── POST /auth/login ─────────────────────────────────────────────────────────
@@ -174,7 +274,12 @@ def refresh_token_endpoint(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token revoked or not found",
         )
-    if db_token.expires_at < datetime.now(timezone.utc):
+    # Ensure tz-aware comparison
+    expires_at = db_token.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if expires_at < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token has expired",

@@ -31,7 +31,9 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, role: UserRole) => Promise<void>;
+  register: (email: string, password: string, role: UserRole) => Promise<string>;
+  verifyOtp: (email: string, otp: string) => Promise<string>;
+  resendOtp: (email: string) => Promise<string>;
   logout: () => Promise<void>;
   hasRole: (...roles: UserRole[]) => boolean;
 }
@@ -74,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const originalRequest = error.config;
         // Skip refresh retry for auth endpoints — their 401s mean bad credentials, not expired tokens
         const url = originalRequest?.url || '';
-        const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh');
+        const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh') || url.includes('/auth/verify-otp') || url.includes('/auth/resend-otp');
         if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
           originalRequest._retry = true;
           try {
@@ -147,8 +149,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // ── Register ──────────────────────────────────────────────────────────────
-  const register = useCallback(async (email: string, password: string, role: UserRole) => {
-    await apiClient.post('/auth/register', { email, password, role });
+  const register = useCallback(async (email: string, password: string, role: UserRole): Promise<string> => {
+    const { data } = await apiClient.post('/auth/register', { email, password, role });
+    return data.message;
+  }, []);
+
+  // ── Verify OTP ────────────────────────────────────────────────────────────
+  const verifyOtp = useCallback(async (email: string, otp: string): Promise<string> => {
+    const { data } = await apiClient.post('/auth/verify-otp', { email, otp });
+    return data.message;
+  }, []);
+
+  // ── Resend OTP ────────────────────────────────────────────────────────────
+  const resendOtp = useCallback(async (email: string): Promise<string> => {
+    const { data } = await apiClient.post('/auth/resend-otp', { email });
+    return data.message;
   }, []);
 
   // ── Logout ────────────────────────────────────────────────────────────────
@@ -175,6 +190,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: !!user,
     login,
     register,
+    verifyOtp,
+    resendOtp,
     logout,
     hasRole,
   };
@@ -189,3 +206,4 @@ export const useAuth = (): AuthContextValue => {
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
   return ctx;
 };
+

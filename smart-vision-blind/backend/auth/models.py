@@ -33,6 +33,8 @@ class User(Base):
     role            = Column(SAEnum(UserRole), nullable=False, default=UserRole.BLIND_USER)
     is_verified     = Column(Boolean, default=False, nullable=False)
     created_at      = Column(DateTime, default=datetime.utcnow, nullable=False)
+    otp_code        = Column(String, nullable=True)
+    otp_expires_at  = Column(DateTime, nullable=True)
 
     # Relationships
     refresh_tokens  = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
